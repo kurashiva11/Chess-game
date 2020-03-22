@@ -45,6 +45,10 @@ io.on('connection', (socket) => {
         socket.broadcast.to(message.room).emit("newMessage", message.text);
     });
 
+    socket.on("createMove", function (move){
+        console.log("createMove :", move.name, move.present, move.move_to);
+        socket.broadcast.to(move.room).emit("newMove", move);
+    });
 
     socket.on('disconnect', () => {
         console.log("user disconnected");
