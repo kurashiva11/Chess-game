@@ -19,6 +19,7 @@ class Users{
         }
         return undefined;
     }
+
     findUser(name){
         for(var i=0; i<this.users.length; i++){
             if(this.users[i].name === name){
@@ -27,6 +28,7 @@ class Users{
         }
         return undefined;
     }
+    
     findOpponent(user){
         for(var i=0; i<this.users.length; i++){
             if( (this.users[i].room == user.room) && (this.users[i].name != user.name) ){
@@ -35,14 +37,19 @@ class Users{
         }
         return undefined;
     }
-    deleteUser(name){
+
+    deleteUser(name, room){
         var len = this.users.length;
-        this.users = this.users.filter(function(ele){
-            return ele.name != name;
-        });
-        return (len - this.users.length);               //return number of users deleted, only 1 name exist in DB.
-                                                        //hence returns 1 if deleted 0 else not deleted.
+        for(var i=0; i<len; i++){
+            if((this.users[i].name === name) && (this.users[i].room === room)){
+                var deluser = this.users[i];
+                this.users = this.users.slice( 0, i ).concat( this.users.slice(i+1, len) );
+                return deluser;
+            }
+        }
+        return undefined;
     }
+
     assignroom(){
         for(var i=0; i<this.users.length; i++){
             if(this.users[i].hasOpponent === false){

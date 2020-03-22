@@ -11,21 +11,46 @@ var sendText = document.querySelector(".send-text");
 var inText = document.querySelector(".text");
 var li = document.querySelectorAll('.player');
 var roomID = undefined;
+var your_coins = "white";
 
 var pieceCoins = {
-    "&#9820;" : "black rock",
-    "&#9822;" : "black knight",
-    "&#9821;" : "black bishop",
-    "&#9819;" : "black queen",
-    "&#9818;" : "black king",
-    "&#9823;" : "black pawn",
-    "&#9814;" : "white rock",
-    "&#9816;" : "white knight",
-    "&#9815;" : "white bishop",
-    "&#9813;" : "white queen",
-    "&#9812;" : "white king",
-    "&#9817;" : "white pawn"
+    "♜" : "black rock",
+    "♞" : "black knight",
+    "♝" : "black bishop",
+    "♛" : "black queen",
+    "♚" : "black king",
+    "♟" : "black pawn",
+    "♖" : "white rock",
+    "♘" : "white knight",
+    "♗" : "white bishop",
+    "♕" : "white queen",
+    "♔" : "white king",
+    "♙" : "white pawn",
+    
+    "black rock" : "♜",
+    "black knight" : "♞",
+    "black bishop" : "♝",
+    "black queen" : "♛",
+    "black king" : "♚",
+    "black pawn" : "♟",
+    "white rock" : "♖",
+    "white knight" : "♘",
+    "white bishop" : "♗",
+    "white queen" : "♕",
+    "white king" : "♔",
+    "white pawn" :"♙"
 }
+
+$("#exampleModalCenter").on('hide.bs.modal', function () {          // before hide
+    if(inputName.value === "" || inputName==undefined){             // validation check.
+        alert("please provide your name");
+        $("#exampleModalCenter").on('hidden.bs.modal', function () {
+            if(inputName.value === "" || inputName==undefined)
+                document.querySelector('.start').click();
+        });
+    }
+});
+
 
 submit.addEventListener('click', function(e){
     e.preventDefault();
@@ -38,7 +63,6 @@ submit.addEventListener('click', function(e){
         name: inputName.value
     }, function(user){
         if(user){                                                   //checks if user already exist in database.
-            // roomID.textContent = user.room;
             roomID = user.room;
             li[0].textContent = user.name;
             document.querySelector('.start').click();               //to remove the login form.
@@ -46,7 +70,6 @@ submit.addEventListener('click', function(e){
                 name: user.name,
                 room: user.room
             }, function(opponent){
-                console.log(opponent);
                 if(opponent){
                     li[1].textContent = opponent.name;
                     play();                                        //start playing only after 2 players have arraived.
@@ -93,13 +116,6 @@ socket.on("newMessage", function (message){
     }, 1000);
 });
 
-
-
-socket.on('disconnect', function(){
-    console.log("disconnected from server.");
-});
-
-
 function play(){
     var selected = false;
     var move = {
@@ -115,6 +131,33 @@ function play(){
     }
     function disableMovements(){
 
+    }
+        // complete below by doing simple maths add,subract, etc.
+    var check = {
+        "rock": function(){
+            console.log("from check func");
+
+        },
+        "knight": function(){
+            console.log("from check func");
+        },
+        "bishop": function(){
+            console.log("from check func");
+        },
+        "queen": function(){
+            console.log("from check func");
+        },
+        "king": function(){
+            console.log("from check func");
+        },
+        "pawn": function(){
+            console.log("from check func");
+        }
+    }
+
+    function checkMoveValidity(){
+        var pieceName = pieceCoins[move["piece"]].split(" ")[1];
+        console.log(check[pieceName]);
     }
 
     function moveCoin(mfrom, mto){
@@ -138,8 +181,12 @@ function play(){
         if( (!selected && cell.text()=="") || (selected && cell.text()!="") ){                 //invalid as there is no element in that position and also select should not change
             return;
         }
-        if(move["present"] == cell.attr("id")){          //deselected, reseting move, select will get into its state.
+        if( (cell.text() != "") && (pieceCoins[cell.text()].split(" ")[0] !== your_coins) ){
+            return;
+        }
+        if(move["present"] == cell.attr("id")){                                                //deselected, reseting move, select will get into its state.
             disableMovements();
+            cell.removeClass("selected");
             move = {
                 name: li[0].textContent,
                 room: roomID,
@@ -151,6 +198,7 @@ function play(){
         else if(!selected){
             move["piece"] = cell.text();
             move["present"] = cell.attr("id");
+            cell.addClass("selected");
             enableMovements();
         } else {
             move["move_to"] = cell.attr("id");
@@ -158,10 +206,12 @@ function play(){
             console.log(move);
 
 //must check if possible to move, like queen jumps over all coins to checkmate opponent king.
+            checkMoveValidity();
             moveCoin(move.present, move.move_to);
             socket.emit("createMove", move);
 
-            move = {                                    //reset move after pushing to backend.
+            $("#" + move.present).removeClass("selected");
+            move = {                                                                            //reset move after pushing to backend.
                 name: li[0].textContent,
                 room: roomID,
                 piece: "",
@@ -178,3 +228,13 @@ function play(){
         // moveCoin(opponentMove.present, opponentMove.move_to);
     });
 }
+
+socket.on("opponent-disconnected", function(delPlayer){
+    alert(`Your ${delPlayer.name} left the match, you won`);
+    location.reload(true);
+});
+
+socket.on('disconnect', function(){
+    console.log("disconnected from server.");
+    alert("disconnected from server your network might be slow.");
+});

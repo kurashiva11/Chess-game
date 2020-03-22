@@ -24,6 +24,18 @@ io.on('connection', (socket) => {
             callback(newplayer);
             socket.join(newplayer.room);
             console.log(`server.js : createPlayer : ${newplayer.name}, ${newplayer.room}, ${newplayer.hasOpponent}`);
+
+            socket.on('disconnect', () => {
+                console.log("user disconnected");
+                var delPlayer = players.deleteUser(newplayer.name, newplayer.room);
+                if( delPlayer ){
+                    console.log(delPlayer.name, "deleted successfully from", delPlayer.room);;
+                    io.to(newplayer.room).emit("opponent-disconnected", delPlayer);
+                } else {
+                    console.log("unable to delete user");
+                }
+            });
+
         } else {
             callback(undefined);
         }
@@ -50,9 +62,10 @@ io.on('connection', (socket) => {
         socket.broadcast.to(move.room).emit("newMove", move);
     });
 
-    socket.on('disconnect', () => {
-        console.log("user disconnected");
-    });
+    // socket.on('disconnect', () => {
+    //     console.log("user disconnected");
+        
+    // });
 });
 
 
