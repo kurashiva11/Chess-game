@@ -196,7 +196,7 @@ function play(){
             var ychange = Math.abs( frm.charCodeAt(1) - to.charCodeAt(1) );
             if( (frm.charCodeAt(0) === 55) && (ychange===0) && (xchange===2) )           //first Move.
                 return true;
-            if( (ychange===0) && (xchange===1) )                                         //other Moves.
+            if( (ychange === 0) && (xchange===1) )                                         //other Moves.
                 return true;
             return false;
         }
