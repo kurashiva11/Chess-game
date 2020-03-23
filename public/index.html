@@ -24,7 +24,6 @@
       <ul class="Players navbar-nav navbar-brand justify-content-center">
         <li class="player nav-item p1"></li>
         <li class="player nav-item p2 btnpop" data-content="recieved" data-toggle="popover" data-placement="bottom"></li>
-        <!-- <button class="btnpop" data-content="recieved" data-toggle="popover" data-placement="bottom" style="display: none;"></button> -->
       </ul>
       <form class="form-inline">
         <input class="form-control mr-sm-2 text" type="text" placeholder="Text to send" aria-label="Search">
@@ -35,109 +34,135 @@
     <!-- Modal -->
     <button type="button" class="start" data-toggle="modal" data-target="#exampleModalCenter" style="display: none;"></button>
     <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalCenterTitle">Authenticate</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+          <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalCenterTitle">Authenticate</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+          </button>
+          </div>
+          <form class="authenticate-form">
+            <div class="modal-body">
+                <label for="recipient-name" class="col-form-label">Name:</label>
+                <input type="text" class="form-control login-name" id="recipient-name" value="" placeholder="Name" autofocus autocomplete="off">
             </div>
-            <form class="authenticate-form">
-              <div class="modal-body">
-                  <label for="recipient-name" class="col-form-label">Name:</label>
-                  <input type="text" class="form-control login-name" id="recipient-name" value="" placeholder="Name" autofocus autocomplete="off">
-              </div>
-              <div class="modal-footer">
-                  <button type="submit" class="btn btn-primary join">Play</button>
-              </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary join">Play</button>
+            </div>
           </form>
         </div>
-        </div>
+      </div>
     </div>
 
-    <table class="chessboard">
-      <tr class="chessboard">
-          <td class="chessboard square" id="11">&#9820;</td>
-          <td class="chessboard square" id="12">&#9822;</td>
-          <td class="chessboard square" id="13">&#9821;</td>
-          <td class="chessboard square" id="14">&#9819;</td>
-          <td class="chessboard square" id="15">&#9818;</td>
-          <td class="chessboard square" id="16">&#9821;</td>
-          <td class="chessboard square" id="17">&#9822;</td>
-          <td class="chessboard square" id="18">&#9820;</td>
-      </tr>
-      <tr class="chessboard">
-          <td class="chessboard square" id="21">&#9823;</td>
-          <td class="chessboard square" id="22">&#9823;</td>
-          <td class="chessboard square" id="23">&#9823;</td>
-          <td class="chessboard square" id="24">&#9823;</td>
-          <td class="chessboard square" id="25">&#9823;</td>
-          <td class="chessboard square" id="26">&#9823;</td>
-          <td class="chessboard square" id="27">&#9823;</td>
-          <td class="chessboard square" id="28">&#9823;</td>
-      </tr>
-      <tr class="chessboard">
-          <td class="chessboard square" id="31"></td>
-          <td class="chessboard square" id="32"></td>
-          <td class="chessboard square" id="33"></td>
-          <td class="chessboard square" id="34"></td>
-          <td class="chessboard square" id="35"></td>
-          <td class="chessboard square" id="36"></td>
-          <td class="chessboard square" id="37"></td>
-          <td class="chessboard square" id="38"></td>
-      </tr>
-      <tr class="chessboard">
-          <td class="chessboard square" id="41"></td>
-          <td class="chessboard square" id="42"></td>
-          <td class="chessboard square" id="43"></td>
-          <td class="chessboard square" id="44"></td>
-          <td class="chessboard square" id="45"></td>
-          <td class="chessboard square" id="46"></td>
-          <td class="chessboard square" id="47"></td>
-          <td class="chessboard square" id="48"></td>
-      </tr> 
-      <tr class="chessboard">
-          <td class="chessboard square" id="51"></td>
-          <td class="chessboard square" id="52"></td>
-          <td class="chessboard square" id="53"></td>
-          <td class="chessboard square" id="54"></td>
-          <td class="chessboard square" id="55"></td>
-          <td class="chessboard square" id="56"></td>
-          <td class="chessboard square" id="57"></td>
-          <td class="chessboard square" id="58"></td>
-      </tr>
-      <tr class="chessboard">
-          <td class="chessboard square" id="61"></td>
-          <td class="chessboard square" id="62"></td>
-          <td class="chessboard square" id="63"></td>
-          <td class="chessboard square" id="64"></td>
-          <td class="chessboard square" id="65"></td>
-          <td class="chessboard square" id="66"></td>
-          <td class="chessboard square" id="67"></td>
-          <td class="chessboard square" id="68"></td>
-      </tr>
-      <tr class="chessboard">
-          <td class="chessboard square" id="71">&#9817;</td>
-          <td class="chessboard square" id="72">&#9817;</td>
-          <td class="chessboard square" id="73">&#9817;</td>
-          <td class="chessboard square" id="74">&#9817;</td>
-          <td class="chessboard square" id="75">&#9817;</td>
-          <td class="chessboard square" id="76">&#9817;</td>
-          <td class="chessboard square" id="77">&#9817;</td>
-          <td class="chessboard square" id="78">&#9817;</td>
-      </tr>
-      <tr class="chessboard">
-          <td class="chessboard square" id="81">&#9814;</td>
-          <td class="chessboard square" id="82">&#9816;</td>
-          <td class="chessboard square" id="83">&#9815;</td>
-          <td class="chessboard square" id="84">&#9813;</td>
-          <td class="chessboard square" id="85">&#9812;</td>
-          <td class="chessboard square" id="86">&#9815;</td>
-          <td class="chessboard square" id="87">&#9816;</td>
-          <td class="chessboard square" id="88">&#9814;</td>
-      </tr>
+    <button type="button" class="loading" data-toggle="modal" data-target="#exampleModalCenter1" style="display: none;"></button>
+    <div class="modal fade" id="exampleModalCenter1" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="spinner-grow ml-auto mr-auto" style="width: 10rem; height: 10rem; margin: 7px;" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <div class="modal-footer">
+            <h5 class="modal-title mr-auto ml-auto" id="exampleModalCenterTitle">Waiting For Opponent to Join.</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="playground">
+
+      <div class="myLostCoins">
+
+      </div>
+
+      <table class="chessboard">
+        <tr class="chessboard">
+            <td class="chessboard square" id="11">&#9820;</td>
+            <td class="chessboard square" id="12">&#9822;</td>
+            <td class="chessboard square" id="13">&#9821;</td>
+            <td class="chessboard square" id="14">&#9819;</td>
+            <td class="chessboard square" id="15">&#9818;</td>
+            <td class="chessboard square" id="16">&#9821;</td>
+            <td class="chessboard square" id="17">&#9822;</td>
+            <td class="chessboard square" id="18">&#9820;</td>
+        </tr>
+        <tr class="chessboard">
+            <td class="chessboard square" id="21">&#9823;</td>
+            <td class="chessboard square" id="22">&#9823;</td>
+            <td class="chessboard square" id="23">&#9823;</td>
+            <td class="chessboard square" id="24">&#9823;</td>
+            <td class="chessboard square" id="25">&#9823;</td>
+            <td class="chessboard square" id="26">&#9823;</td>
+            <td class="chessboard square" id="27">&#9823;</td>
+            <td class="chessboard square" id="28">&#9823;</td>
+        </tr>
+        <tr class="chessboard">
+            <td class="chessboard square" id="31"></td>
+            <td class="chessboard square" id="32"></td>
+            <td class="chessboard square" id="33"></td>
+            <td class="chessboard square" id="34"></td>
+            <td class="chessboard square" id="35"></td>
+            <td class="chessboard square" id="36"></td>
+            <td class="chessboard square" id="37"></td>
+            <td class="chessboard square" id="38"></td>
+        </tr>
+        <tr class="chessboard">
+            <td class="chessboard square" id="41"></td>
+            <td class="chessboard square" id="42"></td>
+            <td class="chessboard square" id="43"></td>
+            <td class="chessboard square" id="44"></td>
+            <td class="chessboard square" id="45"></td>
+            <td class="chessboard square" id="46"></td>
+            <td class="chessboard square" id="47"></td>
+            <td class="chessboard square" id="48"></td>
+        </tr> 
+        <tr class="chessboard">
+            <td class="chessboard square" id="51"></td>
+            <td class="chessboard square" id="52"></td>
+            <td class="chessboard square" id="53"></td>
+            <td class="chessboard square" id="54"></td>
+            <td class="chessboard square" id="55"></td>
+            <td class="chessboard square" id="56"></td>
+            <td class="chessboard square" id="57"></td>
+            <td class="chessboard square" id="58"></td>
+        </tr>
+        <tr class="chessboard">
+            <td class="chessboard square" id="61"></td>
+            <td class="chessboard square" id="62"></td>
+            <td class="chessboard square" id="63"></td>
+            <td class="chessboard square" id="64"></td>
+            <td class="chessboard square" id="65"></td>
+            <td class="chessboard square" id="66"></td>
+            <td class="chessboard square" id="67"></td>
+            <td class="chessboard square" id="68"></td>
+        </tr>
+        <tr class="chessboard">
+            <td class="chessboard square" id="71">&#9817;</td>
+            <td class="chessboard square" id="72">&#9817;</td>
+            <td class="chessboard square" id="73">&#9817;</td>
+            <td class="chessboard square" id="74">&#9817;</td>
+            <td class="chessboard square" id="75">&#9817;</td>
+            <td class="chessboard square" id="76">&#9817;</td>
+            <td class="chessboard square" id="77">&#9817;</td>
+            <td class="chessboard square" id="78">&#9817;</td>
+        </tr>
+        <tr class="chessboard">
+            <td class="chessboard square" id="81">&#9814;</td>
+            <td class="chessboard square" id="82">&#9816;</td>
+            <td class="chessboard square" id="83">&#9815;</td>
+            <td class="chessboard square" id="84">&#9813;</td>
+            <td class="chessboard square" id="85">&#9812;</td>
+            <td class="chessboard square" id="86">&#9815;</td>
+            <td class="chessboard square" id="87">&#9816;</td>
+            <td class="chessboard square" id="88">&#9814;</td>
+        </tr>
       </table>
+
+      <div class="opponentLostCoins">
+
+      </div>
+
+    </div>
 
     <!-- socketio.js -->
     <script src="/socket.io/socket.io.js"></script>

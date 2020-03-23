@@ -12,6 +12,7 @@ var inText = document.querySelector(".text");
 var li = document.querySelectorAll('.player');
 var roomID = undefined;
 var your_coins = "white";
+var opponent_coins = "black";
 
 var pieceCoins = {
     "♜" : "black rock",
@@ -72,9 +73,10 @@ submit.addEventListener('click', function(e){
             }, function(opponent){
                 if(opponent){
                     li[1].textContent = opponent.name;
-                    play();                                        //start playing only after 2 players have arraived.
+                    play();                                         //start playing only after 2 players have arraived.
                 } else {
-                    console.log("waiting for an opponent");
+                                                                    // "waiting for an opponent"
+                    $(".loading").click();                          //to start waiting for opponent
                 }
             });
         } else {
@@ -103,6 +105,7 @@ sendText.addEventListener('click', function(e){
 
 socket.on('newPlayer', function(player){
     li[1].textContent = player.name;
+    document.querySelector(".loading").click();     //remove loading.
     play();
 });
 
@@ -113,7 +116,7 @@ socket.on("newMessage", function (message){
     popover.click();
     setTimeout(function(){
         popover.click();
-    }, 1000);
+    }, 1500);
 });
 
 function play(){
@@ -137,6 +140,8 @@ function play(){
                 if(frm.charCodeAt(0)===to.charCodeAt(0)) {
                     for(var i=frm.charCodeAt(1); i!=to.charCodeAt(1) && (i<57) && (i>48); ) {
                         i = ((to.charCodeAt(1) - frm.charCodeAt(1))>=0) ? i+1 : i-1;
+                        if(i == to.charCodeAt(1))                                                 //might be a kill event.
+                            return true;
                         if($("#" + frm.charAt(0) + Char(i)).text() != ""){
                             console.log("as there is some obstacle");
                             return false;
@@ -145,6 +150,8 @@ function play(){
                 } else {
                     for(var i=frm.charCodeAt(0); (i!=to.charCodeAt(0)) && (i<57) && (i>48); ) {
                         i = ((to.charCodeAt(0) - frm.charCodeAt(0))>=0) ? i+1 : i-1;
+                        if(i == to.charCodeAt(0))
+                            return true;
                         if($("#" + Char(i) + frm.charAt(1)).text() != ""){
                             console.log("as there is some obstacle");
                             return false;
@@ -168,6 +175,9 @@ function play(){
                 for(var i=frm.charCodeAt(0), j=frm.charCodeAt(1); ((i!=to.charCodeAt(0)) && (j!=to.charCodeAt(1))) && (i<57) && (i>48) && (j<57) && (j>48); ) {
                     i = (frm.charCodeAt(0)<=to.charCodeAt(0)) ? i+1 : i-1;
                     j = (frm.charCodeAt(1)<=to.charCodeAt(1)) ? j+1 : j-1;
+                    if((i==to.charCodeAt(0)) && (j==to.charCodeAt(1))){
+                        return true;                                                                                                                                // it might be a kill event.
+                    }
                     if( $("#" + Char(i) + Char(j)).text() != "" ){
                         console.log("there is an obstacle");
                         return false;
@@ -204,7 +214,6 @@ function play(){
 
     function checkMoveValidity(){
         var pieceName = pieceCoins[move["piece"]].split(" ")[1];
-        console.log("frm check :returning: ", check[pieceName]());
         return check[pieceName]();
     }
 
@@ -222,13 +231,15 @@ function play(){
         res += (9 - ( str.charCodeAt(1) - 48));
         return res;
     }
+    
+    //take global var for turn and make true and false from backend.
 
     $(".square").click(function() {
         var cell = $($(this)[0]);
-        if( (!selected && cell.text()=="") || (selected && cell.text()!="") ){                 //invalid as there is an element in that position and also select should not change
+        if( !selected && cell.text()=="" ){                 //invalid as there is an element in that position and also select should not change
             return;
         }
-        if( (cell.text() != "") && (pieceCoins[cell.text()].split(" ")[0] !== your_coins) ){
+        if( !selected && (cell.text() != "") && (pieceCoins[cell.text()].split(" ")[0] !== your_coins) ){        // not yet selected and selected opponent coin, trying to move opponent coin
             return;
         }
         if(move["present"] == cell.attr("id")){                                                //deselected, reseting move, select will get into its state.
@@ -248,11 +259,31 @@ function play(){
         } else {
             move["move_to"] = cell.attr("id");
 
-//must check if possible to move, like knight jumps over all coins to checkmate opponent king.
+            if( cell.text()!="" && pieceCoins[cell.text()].split(' ')[0] === your_coins ){
+                console.log("its your coin can't override");
+                return;
+            }
+
+            if(pieceCoins[move["piece"]] === your_coins+" pawn"){
+                var px = move["present"].charCodeAt(0), py = move["present"].charCodeAt(1);
+                var nx = move["move_to"].charCodeAt(0), ny = move["move_to"].charCodeAt(1);
+                if( cell.text()!="" && ((px-nx)==1) && (Math.abs(ny-py)==1) ){                  //emit kill.
+                    console.log("pawn kill, emit");
+                    moveCoin(move.present, move.move_to);
+                    socket.emit("killCoin", move);
+                }
+            }
+
             if(checkMoveValidity()){
-                console.log(move);
-                moveCoin(move.present, move.move_to);
-                socket.emit("createMove", move);
+                if( cell.text()!="" && pieceCoins[move["piece"]] !== your_coins+" pawn"){
+                    console.log("other coin kill, emit");
+                    moveCoin(move.present, move.move_to);
+                    socket.emit("killCoin", move);
+                } else if( cell.text()=="" ) {
+                    console.log("coin moving");
+                    moveCoin(move.present, move.move_to);
+                    socket.emit("createMove", move);
+                }
             }
             $("#" + move.present).removeClass("selected");
             move = {                                                                            //reset move after pushing to backend.
@@ -268,6 +299,11 @@ function play(){
 
     socket.on("newMove", function (opponentMove){
         moveCoin(convertMoveAsOpponent(opponentMove.present), convertMoveAsOpponent(opponentMove.move_to));
+    });
+
+    socket.on("killedCoin", function(opponentMove){
+        console.log("opponent killed your coin");
+        moveCoin(convertMoveAsOpponent(opponentMove.present), convertMoveAsOpponent(opponentMove.move_to))
     });
 }
 

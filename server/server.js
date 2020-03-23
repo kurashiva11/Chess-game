@@ -23,13 +23,11 @@ io.on('connection', (socket) => {
         if(newplayer){
             callback(newplayer);
             socket.join(newplayer.room);
-            console.log(`server.js : createPlayer : ${newplayer.name}, ${newplayer.room}, ${newplayer.hasOpponent}`);
 
             socket.on('disconnect', () => {
                 console.log("user disconnected");
                 var delPlayer = players.deleteUser(newplayer.name, newplayer.room);
                 if( delPlayer ){
-                    console.log(delPlayer.name, "deleted successfully from", delPlayer.room);;
                     io.to(newplayer.room).emit("opponent-disconnected", delPlayer);
                 } else {
                     console.log("unable to delete user");
@@ -43,7 +41,6 @@ io.on('connection', (socket) => {
 
     socket.on('newPlayer', function(player, callback){
         var opponent = players.findOpponent(player);
-        console.log("newPlayer : player", player, "opponent: ", opponent);
         if(opponent){
             callback(opponent);
             socket.broadcast.emit('newPlayer', player);
@@ -53,19 +50,17 @@ io.on('connection', (socket) => {
     });
 
     socket.on("createMessage", (message) => {
-        console.log("createMessage :", message);
         socket.broadcast.to(message.room).emit("newMessage", message.text);
     });
 
     socket.on("createMove", function (move){
-        console.log("createMove :", move.name, move.present, move.move_to);
         socket.broadcast.to(move.room).emit("newMove", move);
     });
 
-    // socket.on('disconnect', () => {
-    //     console.log("user disconnected");
-        
-    // });
+    socket.on("killCoin", function(data){
+        socket.broadcast.to(data.room).emit("killedCoin", data);
+    });
+
 });
 
 
