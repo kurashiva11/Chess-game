@@ -194,9 +194,9 @@ function play(){
             var frm = move.present, to = move.move_to;
             var xchange = frm.charCodeAt(0) - to.charCodeAt(0);                           //it should only move in one direction.
             var ychange = Math.abs( frm.charCodeAt(1) - to.charCodeAt(1) );
-            if( (frm.charCodeAt(0) === 55) && (ychange===0) && (xchange===-2) )           //first Move.
+            if( (frm.charCodeAt(0) === 55) && (ychange===0) && (xchange===2) )           //first Move.
                 return true;
-            if( (ychange===0) && (xchange===-1) )                                         //other Moves.
+            if( (ychange===0) && (xchange===1) )                                         //other Moves.
                 return true;
             return false;
         }
@@ -204,6 +204,7 @@ function play(){
 
     function checkMoveValidity(){
         var pieceName = pieceCoins[move["piece"]].split(" ")[1];
+        console.log("frm check :returning: ", check[pieceName]());
         return check[pieceName]();
     }
 
@@ -246,10 +247,10 @@ function play(){
             cell.addClass("selected");
         } else {
             move["move_to"] = cell.attr("id");
-            console.log(move);
 
 //must check if possible to move, like knight jumps over all coins to checkmate opponent king.
             if(checkMoveValidity()){
+                console.log(move);
                 moveCoin(move.present, move.move_to);
                 socket.emit("createMove", move);
             }
