@@ -126,38 +126,85 @@ function play(){
         move_to: ""
     }
 
-    function enableMovements(){
-
+    function Char(ele){                                                     //return char of for an ascii value, works only for 0 to 9 chars.
+        return "" + (ele-48);
     }
-    function disableMovements(){
 
-    }
-        // complete below by doing simple maths add,subract, etc.
     var check = {
         "rock": function(){
-            console.log("from check func");
-
+            var frm = move.present, to = move.move_to;
+            if( (frm.charCodeAt(0)===to.charCodeAt(0)) || (frm.charCodeAt(1)===to.charCodeAt(1)) ) {
+                if(frm.charCodeAt(0)===to.charCodeAt(0)) {
+                    for(var i=frm.charCodeAt(1); i!=to.charCodeAt(1) && (i<57) && (i>48); ) {
+                        i = ((to.charCodeAt(1) - frm.charCodeAt(1))>=0) ? i+1 : i-1;
+                        if($("#" + frm.charAt(0) + Char(i)).text() != ""){
+                            console.log("as there is some obstacle");
+                            return false;
+                        }
+                    }
+                } else {
+                    for(var i=frm.charCodeAt(0); (i!=to.charCodeAt(0)) && (i<57) && (i>48); ) {
+                        i = ((to.charCodeAt(0) - frm.charCodeAt(0))>=0) ? i+1 : i-1;
+                        if($("#" + Char(i) + frm.charAt(1)).text() != ""){
+                            console.log("as there is some obstacle");
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
         },
         "knight": function(){
-            console.log("from check func");
+            var frm = move.present, to = move.move_to;
+            if( ( (Math.abs(frm.charCodeAt(0)-to.charCodeAt(0))===1) && (Math.abs(frm.charCodeAt(1)-to.charCodeAt(1))===2) ) || ( (Math.abs(frm.charCodeAt(0)-to.charCodeAt(0))===2) && (Math.abs(frm.charCodeAt(1)-to.charCodeAt(1))===1) ) ) {
+                return true;
+            }
+            return false;
         },
         "bishop": function(){
-            console.log("from check func");
+            var frm = move.present, to = move.move_to;
+            if( Math.abs( frm.charCodeAt(0) - to.charCodeAt(0) ) === Math.abs( frm.charCodeAt(1) - to.charCodeAt(1) ) ) {
+                for(var i=frm.charCodeAt(0), j=frm.charCodeAt(1); ((i!=to.charCodeAt(0)) && (j!=to.charCodeAt(1))) && (i<57) && (i>48) && (j<57) && (j>48); ) {
+                    i = (frm.charCodeAt(0)<=to.charCodeAt(0)) ? i+1 : i-1;
+                    j = (frm.charCodeAt(1)<=to.charCodeAt(1)) ? j+1 : j-1;
+                    if( $("#" + Char(i) + Char(j)).text() != "" ){
+                        console.log("there is an obstacle");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
         },
         "queen": function(){
-            console.log("from check func");
+            if(this.rock() || this.bishop())
+                return true;
+            return false;
         },
         "king": function(){
-            console.log("from check func");
+            var frm = move.present, to = move.move_to;
+            var xchange = Math.abs( frm.charCodeAt(0) - to.charCodeAt(0) );
+            var ychange = Math.abs( frm.charCodeAt(1) - to.charCodeAt(1) );
+            if( (xchange===0 || xchange===1) && (ychange===0 || ychange===1) )
+                return true;
+            return false;
         },
         "pawn": function(){
-            console.log("from check func");
+            var frm = move.present, to = move.move_to;
+            var xchange = frm.charCodeAt(0) - to.charCodeAt(0);                           //it should only move in one direction.
+            var ychange = Math.abs( frm.charCodeAt(1) - to.charCodeAt(1) );
+            if( (frm.charCodeAt(0) === 55) && (ychange===0) && (xchange===-2) )           //first Move.
+                return true;
+            if( (ychange===0) && (xchange===-1) )                                         //other Moves.
+                return true;
+            return false;
         }
     }
 
     function checkMoveValidity(){
         var pieceName = pieceCoins[move["piece"]].split(" ")[1];
-        console.log(check[pieceName]);
+        return check[pieceName]();
     }
 
     function moveCoin(mfrom, mto){
@@ -172,20 +219,18 @@ function play(){
 
         res += (9 - ( str.charCodeAt(0) - 48));
         res += (9 - ( str.charCodeAt(1) - 48));
-        console.log("opponentMove:", res)
         return res;
     }
 
     $(".square").click(function() {
         var cell = $($(this)[0]);
-        if( (!selected && cell.text()=="") || (selected && cell.text()!="") ){                 //invalid as there is no element in that position and also select should not change
+        if( (!selected && cell.text()=="") || (selected && cell.text()!="") ){                 //invalid as there is an element in that position and also select should not change
             return;
         }
         if( (cell.text() != "") && (pieceCoins[cell.text()].split(" ")[0] !== your_coins) ){
             return;
         }
         if(move["present"] == cell.attr("id")){                                                //deselected, reseting move, select will get into its state.
-            disableMovements();
             cell.removeClass("selected");
             move = {
                 name: li[0].textContent,
@@ -199,17 +244,15 @@ function play(){
             move["piece"] = cell.text();
             move["present"] = cell.attr("id");
             cell.addClass("selected");
-            enableMovements();
         } else {
             move["move_to"] = cell.attr("id");
-            disableMovements();
             console.log(move);
 
-//must check if possible to move, like queen jumps over all coins to checkmate opponent king.
-            checkMoveValidity();
-            moveCoin(move.present, move.move_to);
-            socket.emit("createMove", move);
-
+//must check if possible to move, like knight jumps over all coins to checkmate opponent king.
+            if(checkMoveValidity()){
+                moveCoin(move.present, move.move_to);
+                socket.emit("createMove", move);
+            }
             $("#" + move.present).removeClass("selected");
             move = {                                                                            //reset move after pushing to backend.
                 name: li[0].textContent,
@@ -223,9 +266,7 @@ function play(){
     });
 
     socket.on("newMove", function (opponentMove){
-        console.log("new Move", opponentMove);
         moveCoin(convertMoveAsOpponent(opponentMove.present), convertMoveAsOpponent(opponentMove.move_to));
-        // moveCoin(opponentMove.present, opponentMove.move_to);
     });
 }
 
