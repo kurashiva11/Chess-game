@@ -61,6 +61,14 @@ io.on('connection', (socket) => {
         socket.broadcast.to(data.room).emit("killedCoin", data);
     });
 
+    socket.on("opponentTurn", function(data){
+        socket.broadcast.to(data.room).emit("myMove", data);
+    });
+
+    socket.on("opponentWin", function(data){
+        socket.broadcast.to(data.room).emit("YouWin", data);
+    });
+
 });
 
 

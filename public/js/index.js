@@ -10,9 +10,14 @@ var submit = document.querySelector(".join");
 var sendText = document.querySelector(".send-text");
 var inText = document.querySelector(".text");
 var li = document.querySelectorAll('.player');
+var opponentStack = $(".opponentLostCoins");
+var myStack = $(".myLostCoins");
+
 var roomID = undefined;
 var your_coins = "white";
 var opponent_coins = "black";
+var myTurn  = false;
+var id;
 
 var pieceCoins = {
     "♜" : "black rock",
@@ -75,7 +80,7 @@ submit.addEventListener('click', function(e){
                     li[1].textContent = opponent.name;
                     play();                                         //start playing only after 2 players have arraived.
                 } else {
-                                                                    // "waiting for an opponent"
+                    myTurn = true;                                  // "waiting for an opponent"
                     $(".loading").click();                          //to start waiting for opponent
                 }
             });
@@ -106,6 +111,7 @@ sendText.addEventListener('click', function(e){
 socket.on('newPlayer', function(player){
     li[1].textContent = player.name;
     document.querySelector(".loading").click();     //remove loading.
+    Timer.start();
     play();
 });
 
@@ -118,6 +124,36 @@ socket.on("newMessage", function (message){
         popover.click();
     }, 1500);
 });
+
+var Timer = {
+    start : function(){
+        this.progressTimer = $(".progressTimer").progressBarTimer({
+            autostart: false,
+            timeLimit: 120,
+            warningThreshold: 80,
+            warningStyle: 'bg-danger',
+            completeStyle: 'bg-success',
+            smooth: false,
+            striped: true,
+            animated: true,
+            height: 10,
+            label: {
+                show: true,
+                type: 'seconds'
+            },
+            onFinish: function(){
+                socket.emit("opponentWin", {room: roomID});
+                alert("Timeout, sorry opponent Wins");
+                location.reload();
+            }
+        });
+    },
+    stop : function(){
+        console.log("stop");
+        this.progressTimer.stop();
+        $(".timeContainer").html("<div class='progressTimer'>  </div>"); //reset.
+    }
+};
 
 function play(){
     var selected = false;
@@ -222,6 +258,10 @@ function play(){
         var mt = $('#'+mto);
         mt.text(mfrm.text());
         mfrm.text("");
+
+        // myTurn = false;
+        // Timer.stop();
+        socket.emit("opponentTurn", {room: roomID});                       //once coin is moved we have to toggle move.
     }
 
     function convertMoveAsOpponent(str){
@@ -235,66 +275,73 @@ function play(){
     //take global var for turn and make true and false from backend.
 
     $(".square").click(function() {
-        var cell = $($(this)[0]);
-        if( !selected && cell.text()=="" ){                 //invalid as there is an element in that position and also select should not change
-            return;
-        }
-        if( !selected && (cell.text() != "") && (pieceCoins[cell.text()].split(" ")[0] !== your_coins) ){        // not yet selected and selected opponent coin, trying to move opponent coin
-            return;
-        }
-        if(move["present"] == cell.attr("id")){                                                //deselected, reseting move, select will get into its state.
-            cell.removeClass("selected");
-            move = {
-                name: li[0].textContent,
-                room: roomID,
-                piece: "",
-                present: "",
-                move_to: ""
-            }
-        }
-        else if(!selected){
-            move["piece"] = cell.text();
-            move["present"] = cell.attr("id");
-            cell.addClass("selected");
-        } else {
-            move["move_to"] = cell.attr("id");
-
-            if( cell.text()!="" && pieceCoins[cell.text()].split(' ')[0] === your_coins ){
-                console.log("its your coin can't override");
+        console.log("square : ", myTurn);
+        if(myTurn) {
+            var cell = $($(this)[0]);
+            if( !selected && cell.text()=="" ){                 //invalid as there is an element in that position and also select should not change
                 return;
             }
-
-            if(pieceCoins[move["piece"]] === your_coins+" pawn"){
-                var px = move["present"].charCodeAt(0), py = move["present"].charCodeAt(1);
-                var nx = move["move_to"].charCodeAt(0), ny = move["move_to"].charCodeAt(1);
-                if( cell.text()!="" && ((px-nx)==1) && (Math.abs(ny-py)==1) ){                  //emit kill.
-                    console.log("pawn kill, emit");
-                    moveCoin(move.present, move.move_to);
-                    socket.emit("killCoin", move);
+            if( !selected && (cell.text() != "") && (pieceCoins[cell.text()].split(" ")[0] !== your_coins) ){        // not yet selected and selected opponent coin, trying to move opponent coin
+                return;
+            }
+            if(move["present"] == cell.attr("id")){                                                //deselected, reseting move, select will get into its state.
+                cell.removeClass("selected");
+                move = {
+                    name: li[0].textContent,
+                    room: roomID,
+                    piece: "",
+                    present: "",
+                    move_to: ""
                 }
             }
+            else if(!selected){
+                move["piece"] = cell.text();
+                move["present"] = cell.attr("id");
+                cell.addClass("selected");
+            } else {
+                move["move_to"] = cell.attr("id");
 
-            if(checkMoveValidity()){
-                if( cell.text()!="" && pieceCoins[move["piece"]] !== your_coins+" pawn"){
-                    console.log("other coin kill, emit");
-                    moveCoin(move.present, move.move_to);
-                    socket.emit("killCoin", move);
-                } else if( cell.text()=="" ) {
-                    console.log("coin moving");
-                    moveCoin(move.present, move.move_to);
-                    socket.emit("createMove", move);
+                if( cell.text()!="" && pieceCoins[cell.text()].split(' ')[0] === your_coins ){
+                    console.log("its your coin can't override");
+                    return;
+                }
+
+                if(pieceCoins[move["piece"]] === your_coins+" pawn"){
+                    var px = move["present"].charCodeAt(0), py = move["present"].charCodeAt(1);
+                    var nx = move["move_to"].charCodeAt(0), ny = move["move_to"].charCodeAt(1);
+                    if( cell.text()!="" && ((px-nx)==1) && (Math.abs(ny-py)==1) ){                  //emit kill.
+                        console.log("pawn kill, emit");
+                        opponentStack.html( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
+                        console.log( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
+                        moveCoin(move.present, move.move_to);
+                        socket.emit("killCoin", move);
+                    }
+                }
+
+                if(checkMoveValidity()){
+                    if( cell.text()!="" && pieceCoins[move["piece"]] !== your_coins+" pawn"){
+                        console.log("other coin kill, emit");
+                        opponentStack.html( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
+                        console.log( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
+                        moveCoin(move.present, move.move_to);
+                        socket.emit("killCoin", move);
+                    } else if( cell.text()=="" ) {
+                        console.log("coin moving");
+                        moveCoin(move.present, move.move_to);
+                        socket.emit("createMove", move);
+                    }
+                }
+                $("#" + move.present).removeClass("selected");
+                move = {                                                                            //reset move after pushing to backend.
+                    name: li[0].textContent,
+                    room: roomID,
+                    piece: "",
+                    present: "",
+                    move_to: ""
                 }
             }
-            $("#" + move.present).removeClass("selected");
-            move = {                                                                            //reset move after pushing to backend.
-                name: li[0].textContent,
-                room: roomID,
-                piece: "",
-                present: "",
-                move_to: ""
-            }
+            selected = !selected;
         }
-        selected = !selected;
     });
 
     socket.on("newMove", function (opponentMove){
@@ -303,7 +350,23 @@ function play(){
 
     socket.on("killedCoin", function(opponentMove){
         console.log("opponent killed your coin");
+        //show a stack kind bar and insert your coin in it.(pointer-event:none, curser:pointer)
+        myStack.html( `<p>${$('#'+convertMoveAsOpponent(opponentMove["move_to"])).text()}</p>` + myStack.html() );
+        console.log( `<p>${$('#'+convertMoveAsOpponent(opponentMove["move_to"])).text()}</p>` + myStack.html() );
         moveCoin(convertMoveAsOpponent(opponentMove.present), convertMoveAsOpponent(opponentMove.move_to))
+    });
+
+    socket.on("myMove", function(data){
+        myTurn = !myTurn;
+        if(myTurn)
+            Timer.start();
+        else
+            Timer.stop();
+    });
+
+    socket.on("YouWin", function(data){
+        alert("Congratulation!!!, you won the game");
+        location.reload();
     });
 }
 
