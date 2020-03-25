@@ -68,7 +68,6 @@ io.on('connection', (socket) => {
     socket.on("opponentWin", function(data){
         socket.broadcast.to(data.room).emit("YouWin", data);
     });
-
 });
 
 

@@ -4,6 +4,14 @@ socket.on('connect', function(){
     console.log("connected to server");
 });
 
+function Alert(msg){
+    $(".alert-info").html(`<strong>${msg}</strong>`);
+    $(".alert-box").click();
+    $(".alert-box").on('hidden.bs.modal', function () {
+        console.log("hidden");
+    });
+}
+
 document.querySelector('.start').click();
 var inputName = document.querySelector(".login-name");
 var submit = document.querySelector(".join");
@@ -49,7 +57,7 @@ var pieceCoins = {
 
 $("#exampleModalCenter").on('hide.bs.modal', function () {          // before hide
     if(inputName.value === "" || inputName==undefined){             // validation check.
-        alert("please provide your name");
+        Alert("please provide your name");
         $("#exampleModalCenter").on('hidden.bs.modal', function () {
             if(inputName.value === "" || inputName==undefined)
                 document.querySelector('.start').click();
@@ -62,7 +70,7 @@ submit.addEventListener('click', function(e){
     e.preventDefault();
 
     if(inputName.value === "" || inputName==undefined){             // validation check.
-        alert("please provide your name");
+        Alert("please provide your name");
         return;
     }
     socket.emit('createPlayer', {
@@ -85,7 +93,7 @@ submit.addEventListener('click', function(e){
                 }
             });
         } else {
-            alert("Player Already exist.");
+            Alert("Player Already exist.");
             document.querySelector('.start').click();
         }
 
@@ -98,7 +106,7 @@ sendText.addEventListener('click', function(e){
     var msg = inText.value;
     inText.value = ""
     if(!msg){
-        alert("please enter your message");
+        Alert("please enter your message");
         return;
     }
     socket.emit("createMessage", {
@@ -143,13 +151,12 @@ var Timer = {
             },
             onFinish: function(){
                 socket.emit("opponentWin", {room: roomID});
-                alert("Timeout, sorry opponent Wins");
+                Alert("Timeout, sorry opponent Wins");
                 location.reload();
             }
         });
     },
     stop : function(){
-        console.log("stop");
         this.progressTimer.stop();
         $(".timeContainer").html("<div class='progressTimer'>  </div>"); //reset.
     }
@@ -215,7 +222,7 @@ function play(){
                         return true;                                                                                                                                // it might be a kill event.
                     }
                     if( $("#" + Char(i) + Char(j)).text() != "" ){
-                        console.log("there is an obstacle");
+                        // console.log("there is an obstacle");
                         return false;
                     }
                 }
@@ -271,8 +278,6 @@ function play(){
         res += (9 - ( str.charCodeAt(1) - 48));
         return res;
     }
-    
-    //take global var for turn and make true and false from backend.
 
     $(".square").click(function() {
         console.log("square : ", myTurn);
@@ -302,7 +307,7 @@ function play(){
                 move["move_to"] = cell.attr("id");
 
                 if( cell.text()!="" && pieceCoins[cell.text()].split(' ')[0] === your_coins ){
-                    console.log("its your coin can't override");
+                    // console.log("its your coin can't override");
                     return;
                 }
 
@@ -310,7 +315,7 @@ function play(){
                     var px = move["present"].charCodeAt(0), py = move["present"].charCodeAt(1);
                     var nx = move["move_to"].charCodeAt(0), ny = move["move_to"].charCodeAt(1);
                     if( cell.text()!="" && ((px-nx)==1) && (Math.abs(ny-py)==1) ){                  //emit kill.
-                        console.log("pawn kill, emit");
+                        // console.log("pawn kill, emit");
                         opponentStack.html( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
                         console.log( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
                         moveCoin(move.present, move.move_to);
@@ -320,13 +325,13 @@ function play(){
 
                 if(checkMoveValidity()){
                     if( cell.text()!="" && pieceCoins[move["piece"]] !== your_coins+" pawn"){
-                        console.log("other coin kill, emit");
+                        // console.log("other coin kill, emit");
                         opponentStack.html( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
-                        console.log( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
+                        // console.log( `<p>${$('#'+move["move_to"]).text()}</p>` + opponentStack.html() );
                         moveCoin(move.present, move.move_to);
                         socket.emit("killCoin", move);
                     } else if( cell.text()=="" ) {
-                        console.log("coin moving");
+                        // console.log("coin moving");
                         moveCoin(move.present, move.move_to);
                         socket.emit("createMove", move);
                     }
@@ -349,11 +354,14 @@ function play(){
     });
 
     socket.on("killedCoin", function(opponentMove){
-        console.log("opponent killed your coin");
-        //show a stack kind bar and insert your coin in it.(pointer-event:none, curser:pointer)
+        // console.log("opponent killed your coin");
         myStack.html( `<p>${$('#'+convertMoveAsOpponent(opponentMove["move_to"])).text()}</p>` + myStack.html() );
-        console.log( `<p>${$('#'+convertMoveAsOpponent(opponentMove["move_to"])).text()}</p>` + myStack.html() );
-        moveCoin(convertMoveAsOpponent(opponentMove.present), convertMoveAsOpponent(opponentMove.move_to))
+        moveCoin(convertMoveAsOpponent(opponentMove.present), convertMoveAsOpponent(opponentMove.move_to));
+        // console.log(pieceCoins[$('#'+opponentMove["move_to"]).text()]);
+        if( pieceCoins[$('#'+opponentMove["move_to"]).text()].split(' ')[1] === 'king'){
+            Alert("Sorry, you lost the game, better luck next time.");
+            socket.emit("opponentWin", opponentMove);
+        }
     });
 
     socket.on("myMove", function(data){
@@ -365,17 +373,22 @@ function play(){
     });
 
     socket.on("YouWin", function(data){
-        alert("Congratulation!!!, you won the game");
+        Alert("Congratulation!!!, you won the game");
         location.reload();
     });
 }
 
 socket.on("opponent-disconnected", function(delPlayer){
-    alert(`Your ${delPlayer.name} left the match, you won`);
+    Alert(`Your ${delPlayer.name} left the match, you won`);
     location.reload(true);
 });
 
 socket.on('disconnect', function(){
     console.log("disconnected from server.");
-    alert("disconnected from server your network might be slow.");
+    Alert("disconnected from server your network might be slow.");
+});
+
+
+$(window).bind('beforeunload',function(){
+   return 'exiting Game';
 });
